@@ -1,0 +1,55 @@
+﻿@model HiStaff.Share.Model.EmploymentPopupModel
+@{
+    Layout = "~/Views/Shared/_LayoutPopup.cshtml";
+}<div class="timeapprove-popup">
+    <input type="hidden" id="status" />
+    <div class="confirm-message">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label data-i18n="ĐỊA ĐIỂM">Địa điểm</label>
+                        @Html.DropDownListFor(x => Model.WorkLocation, new SelectList(Model.WorkLocationOptions, "ID", "NAME"), new { @class = "select2-single-select-first" })
+                    </div>
+                </div>
+            </div>
+            <div class="row clone">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label data-i18n="SỐ LƯỢNG">Số lượng</label>
+                        @Html.TextBoxFor(x => Model.Quantity, new { @class = "form-control" })
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+    <div class="confirm-button">
+        <button type="button" class="btn-outline" id="btnCancel">Bỏ qua</button>
+        <button type="button" class="selected" id="btnConfirm">Đồng ý</button>
+    </div>
+
+    @section scripts{
+        <script>
+            $(document).ready(function () {
+                let params = new URLSearchParams(location.search);
+                var type = params.get('type');
+                if (type == "locationSelect") {
+                    $('.clone').hide();
+                }
+            })
+            $('#btnConfirm').on('click', function () {
+                $('#status').val(1);
+                parent.$("#location").val($('#WorkLocation option:selected').val())
+                parent.$("#clone").val($('#Quantity').val())
+                var windows = parent.$('#window').data("kendoWindow");
+                if (windows) parent.$('#window').data("kendoWindow").close();
+            });
+
+            $('#btnCancel').on('click', function () {
+                $('#status').val(0);
+                var windows = parent.$('#window').data("kendoWindow");
+                if (windows) parent.$('#window').data("kendoWindow").close();
+            });
+        </script>
+    }

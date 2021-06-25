@@ -1,0 +1,583 @@
+﻿@using HiStaff.Share.Extensions;
+@model HiStaff.Share.Model.EmploymentResponse
+@using HiStaff.Share.Code;
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var title = "QUẢN LÝ TUYỂN DỤNG";
+    var lang = ViewData["lang"] == null ? "vi-VN" : ViewData["lang"].ToString();
+    title = Utilities.Translate(title, lang);
+    ViewData["Title"] = title;
+}
+<div class="background-cover">
+    <div class="employment-content">
+        <div class="row">
+            <div class="col-lg-5">
+                <div class="search-form">
+                    <div class="form-group w-100">
+                        <label data-i18n="TÌM KIẾM">Tìm Kiếm</label>
+                        <input type="text" class="w-100" id="SearchLeft" name="SearchLeft" placeholder="Mã vị trí/ Tên vị trí/ Mã nhân viên/ Tên nhân viên" data-i18n="MÃ VỊ TRÍ/ TÊN VỊ TRÍ/ MÃ NHÂN VIÊN/ TÊN NHÂN VIÊN" />
+                    </div>
+                    <div class="form-group b-search">
+                        <button type="button" onclick="packageFilterLeft()" class="btn-outline" data-i18n="TÌM KIẾM">Tìm kiếm</button>
+                    </div>
+                </div>
+                <div class="search-form">
+                    <div class="form-group w-100">
+                        <label data-i18n="ĐƠN VỊ">Đơn vị</label>
+                        @Html.HiddenFor(model => model.OrgIdLeft)
+                        <input id="dropdowntree-left" style="width: 100%;" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div id="leftGrid" class="grid"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-2">
+                <div class="button-employment search-form button-small">
+                    <div><button id="btnTransfer"><img src="~/img/arrow-right-visible.png" /></button></div>
+                    <div><button id="btnClone"><img src="~/img/add.png" /></button></div>
+                    <div><button id="btnSave"><img src="~/img/save.png" /></button></div>
+                    <div><button id="btnClear"><img src="~/img/arrow-left-visible.png" /></button></div>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="search-form">
+                    <div class="form-group w-100">
+                        <label data-i18n="TÌM KIẾM">Tìm Kiếm</label>
+                        <input type="text" class="w-100" id="SearchRight" name="SearchRight" placeholder="Mã vị trí/ Tên vị trí/ Mã nhân viên/ Tên nhân viên" data-i18n="MÃ VỊ TRÍ/ TÊN VỊ TRÍ/ MÃ NHÂN VIÊN/ TÊN NHÂN VIÊN" />
+                    </div>
+                    <div class="form-group b-search">
+                        <button type="button" onclick="packageFilterRight()" class="btn-outline" data-i18n="TÌM KIẾM">Tìm kiếm</button>
+                    </div>
+                </div>
+                <div class="search-form">
+                    <div class="form-group w-100">
+                        <label data-i18n="ĐƠN VỊ">Đơn vị</label>
+                        @Html.HiddenFor(model => model.OrgIdRight)
+                        <input id="dropdowntree-right" style="width: 100%;" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div id="rightGrid" class="grid"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <input type="hidden" name="location" id="location" />
+        <div id="confirm"></div>
+        <input type="hidden" name="clone" id="clone" />
+    </div>
+</div>
+@section scripts
+{
+    <script>
+        var dataSave = [];
+        var dataRight = [];
+        var titleCode = null;
+        var statusType = '';
+        var org_name_right = '';
+
+        function getDataItem(dataItem) {
+                return {
+                    "id": dataItem.id,
+                    "code": dataItem.code,
+                    "name_en": dataItem.name_en,
+                    "name_vn": dataItem.name_vn,
+                    "title_group_id": dataItem.title_group_id,
+                    "title_group_name": dataItem.title_group_name,
+                    "remark": dataItem.remark,
+                    "actflg": dataItem.actflg,
+                    "created_date": dataItem.created_date,
+                    "created_by": dataItem.created_by,
+                    "created_log": dataItem.created_log,
+                    "modified_date": dataItem.modified_date,
+                    "modified_by": dataItem.modified_by,
+                    "modified_log": dataItem.modified_log,
+                    "drive_infor": dataItem.drive_infor,
+                    "work_involve_id": dataItem.work_involve_id,
+                    "work_involve_name": dataItem.work_involve_name,
+                    "ovt": dataItem.ovt,
+                    "upload_file": dataItem.upload_file,
+                    "level_id": dataItem.level_id,
+                    "level_title_name": dataItem.level_title_name,
+                    "drive_infor_check": dataItem.drive_infor_check,
+                    "ovt_check": dataItem.ovt_check,
+                    "job_id": dataItem.job_id,
+                    "job_name": dataItem.job_name,
+                    "job_band_name": dataItem.job_band_name,
+                    "org_id": dataItem.org_id,
+                    "org_name": dataItem.org_name,
+                    "code_pos": dataItem.code_pos,
+                    "lm": dataItem.lm,
+                    "lm_code": dataItem.lm_code,
+                    "lm_name": dataItem.lm_name,
+                    "is_owner": dataItem.is_owner,
+                    "csm": dataItem.csm,
+                    "csm_code": dataItem.csm_code,
+                    "csm_name": dataItem.csm_name,
+                    "is_nonphysical": dataItem.is_nonphysical,
+                    "cost_center": dataItem.cost_center,
+                    "cost_center_code": dataItem.cost_center_code,
+                    "work_location": dataItem.work_location,
+                    "work_location_name": dataItem.work_location_name,
+                    "interim": dataItem.interim,
+                    "interim_name": dataItem.interim_name,
+                    "job_spec": dataItem.job_spec,
+                    "is_plan": dataItem.is_plan,
+                    "master": dataItem.master,
+                    "master_code": dataItem.master_code,
+                    "master_name": dataItem.master_name,
+                    "org_id_search": dataItem.org_id_search,
+                    "textbox_search": dataItem.textbox_search,
+                    "org_id2_search": dataItem.org_id2_search,
+                    "textbox2_search": dataItem.textbox2_search,
+                    "color": dataItem.color,
+                    "concurrent": dataItem.concurrent,
+                    "hiring_status": dataItem.hiring_status,
+                    "flag": dataItem.flag,
+                    "is_plan_left": dataItem.is_plan_left,
+                    "both": dataItem.both,
+                    "effective_date": dataItem.effective_date,
+                    "ngay_sd": dataItem.ngay_sd,
+                    "type_activities": dataItem.type_activities,
+                    "soluong": dataItem.soluong
+                }
+        }
+
+        var columns = [
+            {
+                selectable: true,
+                width: 50,
+            },
+            {
+                field: "code",
+                title: translate("MÃ"),
+                template: function (dataItem) {
+                    if (dataItem.is_owner == true) {
+                        return "<b>" + dataItem.code + "</b>"
+                    }
+                    else {
+                        return dataItem.code
+                    }
+                }
+            },
+            {
+                field: "name_vn",
+                title: translate("TÊN"),
+                template: function (dataItem) {
+                    if (dataItem.is_owner == true) {
+                        return "<b>" + dataItem.name_vn + "</b>"
+                    }
+                    else {
+                        return dataItem.name_vn
+                    }
+                }
+            },
+            {
+                field: "master_name",
+                title: translate("TÊN NHÂN VIÊN"),
+                template: function (dataItem) {
+                    if (dataItem.is_owner == true) {
+                        return "<b>" + dataItem.master_name + "</b>"
+                    }
+                    else {
+                        return dataItem.master_name
+                    }
+                }
+            },
+            {
+                field: "org_name",
+                title: translate("ĐƠN VỊ"),
+                template: function (dataItem) {
+                    if (dataItem.is_owner == true) {
+                        return "<b>" + dataItem.org_name + "</b>"
+                    }
+                    else {
+                        return dataItem.org_name
+                    }
+                }
+            },
+
+        ]
+
+        function processClone() {
+            dataRight = [];
+            var rightGrid = $("#rightGrid").histaffGrid();
+            var leftGrid = $("#leftGrid").histaffGrid();
+            var selectItems = leftGrid.select();
+            var items = rightGrid.getItems();
+            for (var i = 0; i < items.length; i++) {
+                var item = getDataItem(items[i]);
+                dataRight.push(item);
+            }
+            selectItems.each(function (idx) {
+                for (var i = 0; i < $("#clone").val(); i++) {
+                    if (leftGrid.dataItem(this).is_owner == true && $("#clone").val() > 1) {
+                        messageBox(translate("BẠN KHÔNG ĐƯỢC NHÂN BẢN 2 LẦN TRƯỞNG PHÒNG"))
+                        return false;
+                    }
+                    var item = getDataItem(leftGrid.dataItem(this));
+                    item.code = titleCode;
+                    titleCode++;
+                    function pad(num, size) {
+                        num = num.toString();
+                        while (num.length < size) num = "0" + num;
+                        return num;
+                    }
+                    item.code = pad(titleCode, 5);
+                    item.org_name = org_name_right
+                    item.work_location = $("#location").val();
+                    dataRight.push(item);
+                    dataSave.push(item);
+                }
+            });
+            rightGrid.destroy();
+            $("#rightGrid").empty();
+            $("#rightGrid").kendoGrid({
+                columns: columns,
+                pageable: {
+                    pageSizes: true
+                },
+                selectable: "multiple",
+                dataSource: {
+                    pageSize: 10,
+                    data: dataRight
+                }
+            });
+        }
+
+            function packageFilterLeft()
+            {
+                $('#leftGrid').data('kendoGrid').dataSource.read();
+                $('#leftGrid').data('kendoGrid').refresh();
+        }
+
+            function packageFilterRight()
+            {
+                $('#rightGrid').data('kendoGrid').dataSource.read();
+                $('#rightGrid').data('kendoGrid').refresh();
+        }
+
+            function renderGridLeft() {
+                $('#leftGrid').histaffGrid({
+                    dataSource: {
+                        transport: {
+                            read: {
+                                url: function () {
+                                    var url = "@Url.Action("GetEmployment", "Recruitment", new { Area = "Recruitment" })";
+                                    url += "?orgId=" + $("#OrgIdLeft").val();
+                                    url += "&search=" + $("#SearchLeft").val();
+                                    url += "&type=Left";
+                                    return url;
+                                }
+                            }
+                        }
+                    },
+                    selectable: 'multiple row',
+                    filterable: false,
+                    height: '50vh',
+                    columns: columns,
+
+                    dataBound: function (e) {
+                            renderGridRight();
+                    }
+                });
+        }
+
+            function renderGridRight() {
+                $('#rightGrid').histaffGrid({
+                    dataSource: {
+                        transport: {
+                            read: {
+                                url: function () {
+                                    var url = "@Url.Action("GetEmployment", "Recruitment", new { Area = "Recruitment" })";
+                                    url += "?orgId=" + $("#OrgIdRight").val();
+                                    url += "&search=" + $("#SearchRight").val();
+                                    url += "&type=Right";
+                                    return url;
+                                }
+                            }
+                        }
+                    },
+                    selectable: 'multiple row',
+                    filterable: false,
+                    height: '50vh',
+                    columns: columns
+                });
+        }
+
+        var initFunction = function () {
+            var orgTreeData = @Html.Raw(Model.OrganizationOptions.JsonSerialize());
+            $(document).ready(function () {
+
+                $('#dropdowntree-left').histaffDropdowntree({
+                    placeholder: "Select ...",
+                    dataSource: orgTreeData,
+                    change: function (dropdowntree) {
+                        $("#OrgIdLeft").val(dropdowntree.value().toString());
+                        lstLeft = null;
+                        lstRight = null;
+                        var leftGrid = $("#leftGrid").data("kendoGrid")
+                        $("#leftGrid").empty()
+                        leftGrid.destroy()
+                        renderGridLeft()
+
+                        if (statusType != "") {
+                            statusType = ""
+                        }
+
+                    }
+
+                }
+                )
+
+                $('#dropdowntree-right').histaffDropdowntree({
+                    placeholder: "Select ...",
+                    dataSource: orgTreeData,
+
+                    change: function (dropdowntree) {
+                        org_name_right = dropdowntree.options.dataSource[0].text;
+                        $("#OrgIdRight").val(dropdowntree.value().toString());
+                        lstLeft = null;
+                        lstRight = null;
+                        var rightGrid = $("#rightGrid").data("kendoGrid")
+                        $("#rightGrid").empty()
+                        rightGrid.destroy()
+                        renderGridRight()
+
+                        if (statusType != "") {
+                            statusType = ""
+                        }
+
+                    },
+
+                }
+                )
+
+                renderGridLeft();
+
+                $("#btnTransfer").on('click', function () {
+                    dataSave = [];
+                    if (statusType == "") {
+                        statusType = "Transfer"
+                    }
+                    if (statusType != "Transfer") {
+                        $('#confirm').histaffConfirm({
+                            title: translate("WARNING"),
+                            content: translate("BẠN HIỆN ĐANG NHÂN BẢN KHÔNG THỂ CHUYỂN ĐỔI, BẠN CÓ MUỐN PHỤC HỒI DỮ LIỆU ĐỂ CHUYỂN ĐỔI?"),
+                            close: function (e, args) {
+                                if (args.status) {
+                                    $("#btnClear").trigger('click')
+                                    statusType = "Transfer";
+                                }
+                            }
+                        })
+                        return false;
+                    }
+                    var currentRightGrid = $("#rightGrid").data("kendoGrid").dataSource.view();
+                    var currentLeftGrid = $("#leftGrid").data("kendoGrid").dataSource.view();
+                    if ($('#OrgIdRight').val() == "") {
+                        messageBox(translate("BẠN CHƯA CHỌN ĐƠN VỊ "))
+                        return false;
+                    }
+                    else {
+                        if ($("#leftGrid").histaffGrid().select().length == 0) {
+                            messageBox(translate("BẠN CHƯA CHỌN BẢN GHI "))
+                            return false;
+                        }
+                        $("#location").val("");
+                        var typePopup = "locationSelect"
+                        $('#leftGrid').histaffWindow({
+                            title: translate("CHỌN ĐỊA ĐIỂM"),
+                            content: "@Url.Action("EmploymentPopup", "Recruitment", new { Area = "Recruitment" })?type=" + typePopup,///profile/employment-popup
+                            height: '45vh',
+                            close: function (e) {
+                                if ($("#location").val() == "") {
+                                    return false;
+                                }
+                                else {
+                                    var rightGrid = $("#rightGrid").data("kendoGrid");
+                                    var leftGrid = $("#leftGrid").data("kendoGrid");
+                                    var rows = leftGrid.select();
+                                    rows.each(function (idx) {
+                                        var item = getDataItem(leftGrid.dataItem(this));
+                                        item.org_name = org_name_right
+                                        item.work_location = $("#location").val();
+                                        dataSave.push(item)
+                                        currentRightGrid.push(item)
+                                    })
+                                    var leftData = currentLeftGrid.filter(el => !dataSave.map(data => data.code).includes(el.code));
+                                    leftGrid.destroy()
+                                    rightGrid.destroy()
+                                    $("#leftGrid").empty()
+                                    $("#rightGrid").empty()
+                                    $("#leftGrid").kendoGrid({
+                                        columns: columns,
+                                        pageable: {
+                                            pageSizes: true
+                                        },
+                                        selectable: "multiple",
+                                        dataSource: {
+                                            pageSize: 10,
+                                            data: leftData
+                                        }
+                                    });
+                                    $("#rightGrid").kendoGrid({
+                                        columns: columns,
+                                        selectable: "multiple",
+                                        pageable: {
+                                            pageSizes: true
+                                        },
+                                        dataSource: {
+                                            pageSize: 10,
+                                            data: currentRightGrid
+                                        }
+                                    });
+                                }
+                            }
+                        })
+                    }
+                })
+
+                $("#btnClear").on('click', function () {
+                    dataSave = []
+                    dataRight = [];
+                    var rightGrid = $("#rightGrid").data("kendoGrid")
+                    var leftGrid = $("#leftGrid").data("kendoGrid")
+                    $("#rightGrid").empty()
+                    $("#leftGrid").empty()
+                    rightGrid.destroy()
+                    leftGrid.destroy()
+                    renderGridLeft()
+                })
+
+                $("#btnClone").on('click', function () {
+                    if (statusType == "") {
+                        statusType = "Clone"
+                    }
+                    if (statusType != "Clone") {
+                        $('#confirm').histaffConfirm({
+                            title: translate("WARNING"),
+                            content: translate("BẠN ĐANG CHUYỂN ĐỔI KHÔNG THỂ NHÂN BẢN, BẠN CÓ MUỐN PHỤC HỒI DỮ LIỆU ĐỂ NHÂN BẢN?"),
+                            close: function (e, args) {
+                                if (args.status) {
+                                    $("#btnClear").trigger('click')
+                                    statusType = "Clone";
+                                }
+                            }
+                        });
+                        return false;
+                    }
+                    if ($('#OrgIdRight').val() == "") {
+                        messageBox(translate("BẠN CHƯA CHỌN ĐƠN VỊ "));
+                        return false;
+                    }
+                    if ($("#leftGrid").histaffGrid().select().length == 0) {
+                        messageBox(translate("BẠN CHƯA CHỌN BẢN GHI "))
+                        return false;
+                    }
+                    $("#location").val("");
+                    $("#clone").val("");
+                    $('#leftGrid').histaffWindow({
+                        title: translate("NHÂN BẢN"),
+                        content: "@Url.Action("EmploymentPopup", "Recruitment", new { Area = "Recruitment" })",///profile/employment-popup
+                        height: '45vh',
+                        close: function (e) {
+                            if ($("#location").val() == "" || $("#clone").val() == "") {
+                                return false;
+                            }
+                            if (titleCode == null) {
+                                PostAjax({
+                                    url: "@Url.Action("GetCloneTitleCodeEmployment", "Recruitment", new { Area = "Recruitment" })",
+                                    success: function (data) {
+                                        titleCode = data.data;
+                                        processClone();
+                                    }
+                                })
+                            }
+                            else {
+                                processClone();
+                            }
+                        }
+                    });
+                })
+
+                $("#btnSave").on('click', function () {
+                    if (dataSave.length == 0) {
+                        messageBox(translate("BẠN CHƯA CÓ DỮ LIỆU NÀO ĐỂ LƯU"))
+                        return false;
+                    }
+
+                    if (statusType == "Transfer") {
+                        var formData = new FormData();
+                            for (var i = 0; i < dataSave.length; i++) {
+                                for (const [key, value] of Object.entries(dataSave[i])) {
+                                    formData.append("Datas[" + [i] + "]." + `${key}`, `${value}`);
+                                }
+                        }
+
+                        formData.append("OrgIdRight", $("#OrgIdRight").val())
+                        formData.append("OrgIdLeft", $("#OrgIdLeft").val())
+                        PostAjax({
+                            url: "@Url.Action("TransferEmployment", "Recruitment", new { Area = "Recruitment" })",
+                            data: formData,
+                            success: function (data) {
+                                if (data.status) {
+                                    if (data.message) {
+                                        parent.messageBox(data.message, { type: 'success' });
+                                    }
+                                    dataSave = []
+                                    dataRight = [];
+                                    $("#btnClear").trigger('click')
+                                }
+                                else {
+                                    parent.messageBox(data.message);
+                                }
+                            },
+                            error: function (e) {
+                                parent.messageBox(data.message, { type: 'error' });
+                            }
+                        });
+                        return false;
+                    }
+                    if (statusType == "Clone") {
+                        var formData = new FormData();
+                        for (var i = 0; i < dataSave.length; i++) {
+                            for (const [key, value] of Object.entries(dataSave[i])) {
+                                formData.append("Datas[" + [i] + "]." + `${key}`, `${value}`);
+                            }
+                        }
+                        formData.append("OrgIdRight", $("#OrgIdRight").val())
+                        formData.append("OrgIdLeft", $("#OrgIdLeft").val())
+                        PostAjax({
+                            url: "@Url.Action("CloneEmployment", "Recruitment", new { Area = "Recruitment" })",
+                            data: formData,
+                            success: function (data) {
+                                if (data.status) {
+                                    if (data.message) {
+                                        parent.messageBox(data.message, { type: 'success' });
+                                    }
+                                    dataSave = []
+                                    dataRight = [];
+                                    $("#btnClear").trigger('click')
+                                }
+                                else {
+                                    parent.messageBox(data.message);
+                                }
+                            },
+                            error: function (e) {
+                                parent.messageBox(data.message, { type: 'error' });
+                            }
+                        });
+                        return false;
+                    }
+                })
+            })
+
+
+        }
+    </script>
+}
